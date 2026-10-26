@@ -19,53 +19,43 @@ func (cfg *Config) SetUser(userName string) error {
 }
 
 func Read() (Config, error) {
-	fullPath, err := getConfigFilePath()
+	path, err := configFilePath()
 	if err != nil {
 		return Config{}, err
 	}
 
-	file, err := os.Open(fullPath)
+	file, err := os.Open(path)
 	if err != nil {
 		return Config{}, err
 	}
 	defer file.Close()
 
-	decoder := json.NewDecoder(file)
-	cfg := Config{}
-	err = decoder.Decode(&cfg)
-	if err != nil {
+	var cfg Config
+	if err := json.NewDecoder(file).Decode(&cfg); err != nil {
 		return Config{}, err
 	}
-
 	return cfg, nil
 }
 
-func getConfigFilePath() (string, error) {
+func configFilePath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	fullPath := filepath.Join(home, configFileName)
-	return fullPath, nil
+	return filepath.Join(home, configFileName), nil
 }
 
 func write(cfg Config) error {
-	fullPath, err := getConfigFilePath()
+	path, err := configFilePath()
 	if err != nil {
 		return err
 	}
 
-	file, err := os.Create(fullPath)
+	file, err := os.Create(path)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	encoder := json.NewEncoder(file)
-	err = encoder.Encode(cfg)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return json.NewEncoder(file).Encode(cfg)
 }
